@@ -3,10 +3,12 @@ const app = express();
 require('dotenv').config();
 const cors = require('cors');
 const blogRoutes = require('./routes/blogRoutes');
+const userRoutes = require('./routes/userRoutes');
 const mongoose = require('mongoose');
 const passport  = require('passport');
 require('./config/passport')(passport);
 const session = require('express-session');
+
 
 //DB
 mongoose.connect(process.env.blog_DB , {useNewUrlParser: true , useUnifiedTopology: true})
@@ -38,7 +40,8 @@ app.use(express.json());
 app.use(express.urlencoded({extended:true}));
 
 // Routes
-app.use(blogRoutes)
+app.use(blogRoutes);
+app.use(userRoutes);
 
 
 

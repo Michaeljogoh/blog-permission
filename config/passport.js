@@ -4,30 +4,28 @@ const bcrypt = require('bcrypt');
 const Users = require('../models/Users');
 
 
-module.exports = (passport) =>{ 
+module.exports = async (passport) =>{ 
     passport.use(
-        new LocalStrategy({usernameField: 'email'}, (email, password, done)=>{
+        new LocalStrategy ({usernameField: 'username'}, async (username, password , done) =>{
             //match user
-            Users.findOne({email:email})
+         await Users.findOne({username:username})
             .then(user =>{
                 if(!user){
-                  return done (null , false , {message:"Email is registerd"})
+                  return done (null , false , {message:"Username is registerd"})
                 }
                 // match password
-                bcrypt.compare(password, user.password, (err , isMatch)=>{
-                    if(err) {
-                        throw err
-                    }
+               bcrypt.compare(password, user.password, async (isMatch)=>{
                     if(isMatch){
-                        return done(null , user)
+                        await user
                     } else {
-                        return  done(null , false)
+                        res.status(404).send(false)
                     }
                     
                 });
             })
             .catch(err=> console.log(err))
         })
+        
     )
 
 //    serialize users
@@ -35,11 +33,12 @@ module.exports = (passport) =>{
         done(null, user.id);
       });
     //  deserializer  users
-      passport.deserializeUser((id, done)=> {
-        Users.findById(id, function(err, user) {
+      passport.deserializeUser  ( async (id, done)=> {
+    await Users.findById(id, function(err, user) {
           done(err, user);
         });
       });
+      
 
 
 }

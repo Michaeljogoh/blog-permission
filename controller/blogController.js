@@ -1,85 +1,13 @@
 const BlogPost = require('../models/blogModel');
-const Users = require('../models/Users');
-const bcrypt  = require('bcrypt');
-const passport = require('passport');
-
-
-
-
-// Register User
- const registerUsers = (req, res) =>{
-    const {name , email ,password , password2 , date} = req.body
-    let errors = []
-    // validation
-    if(!name || !email || !password || !password2){
-     errors.push({msg: "Please fill in all fields"})
-    }
-    // if password is not match
-    if(password !== password2){
-     errors.push({msg: "Password does not match"})
-    }
-    // password must be six characters
-    if(password < 6){
-     errors.push({msg: "Password must not be less than six characters"})
-    }
-
-    // render form if no error caught
-    if(errors < 0){
-        res.render({errors , name, email , password , password2})
-    }  else {
-
-    Users.findOne({email:email})
-    .then(user =>{
-         if(user){
-            errors.push({msg: "Email already exist"})
-         } else {
-
-
-    const newUser = new Users({name , email , password})
-            //  hash password
-     bcrypt.genSalt(10, ( err , salt)=>
-         bcrypt.hash(newUser.password, salt, (err,hash)=>{
-                if(err) throw err;
-             
-                newUser.password = hash;
-                
-                //save user
-
-                newUser.save();
-                res.status(200).send("Registerd");
-              
-        }))
-    
-  
-    }
-   })
-}
- }
-
-//    Login 
-const loginUsers = (req , res , next)  =>{
-        passport.authenticate('local', {
-            successRedirect:"/",
-            failureRedirect:"/login",
-            failureFlash:true
-        })
-        next();
-
-}
-
-// Logout
-const logoutUsers = (req,res)=>{
-    req.logout();
-    res.redirect('/login');
-}
 
 
 // post 
 const postBlogs = async (req , res) =>{
     const {title , content , author } = req.body
-    await BlogPost.create({title , content , author});
-    res.status(200).send('Blog Post Added');
+  const newBLogs =  await BlogPost.create({title , content , author});
+    res.status(200).json({newBLogs});
 };
+
 // getPostBlog paginational
 const getPostBlogs = async (req , res) =>{
     // query with page limit 
@@ -89,6 +17,7 @@ const getPostBlogs = async (req , res) =>{
     .limit(limit * 1)
     .skip((page - 1 ) * limit)
     .exec();
+
     //Get Total documents in blogPost collection
 const count = await BlogPost.countDocuments();
 res.json({getPosts, totalPages:Math.ceil(count / limit), currentPage: page})
@@ -101,6 +30,7 @@ const searchPostBlogs =  async (req , res)=>{
     .limit(limit * 1)
     .skip((page - 1 ) * limit)
     .exec();
+    
     //Get Total documents in blogPost collection
 const search = await BlogPost.countDocuments();
     res.status(200).json({searchPosts,  totalPages:Math.ceil(search/ limit), currentPage: page});
@@ -108,12 +38,12 @@ const search = await BlogPost.countDocuments();
 
 // update
 const updatePostBlogs = async (req , res ) =>{
-    const {title , content , author} = req.body;
-    if (req.body.author !== author) {
+    const {title , content , author } = req.body;
+    if (author !== author) {
         res.status(404).send('Not Found')
     } else {
-        await BlogPost.findByIdAndUpdate(req.params.id, {title , content , author});
-        res.status(200).send("Updated!!!")
+     const newUpdatePostBlogs =  await BlogPost.findByIdAndUpdate(req.params.id, {title , content , author});
+        res.status(200).json({newUpdatePostBlogs})
     }
    
  
@@ -121,12 +51,17 @@ const updatePostBlogs = async (req , res ) =>{
 
 const deletePostBlogs = async (req , res) =>{
     const {title , content , author } = req.body;
-    await BlogPost.findByIdAndDelete(req.params.id, {title , content , author});
-    res.status(200).send("Deleted!!!")
-}
+    if(author !== author ){
+        res.status(400).send('Can not delete the post')
+    } else {
+    const newDeletePostBlog =  await BlogPost.findByIdAndDelete(req.params.id, {title , content , author});
+        res.status(200).json({newDeletePostBlog})
+    }
+    }
+    
 
 
 
 
 
-module.exports = {postBlogs , getPostBlogs, searchPostBlogs, updatePostBlogs, registerUsers , loginUsers , logoutUsers, deletePostBlogs}
+module.exports = {postBlogs , getPostBlogs, searchPostBlogs, updatePostBlogs, deletePostBlogs}
